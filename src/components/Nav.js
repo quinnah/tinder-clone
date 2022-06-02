@@ -1,15 +1,21 @@
 import whiteLogo from '../images/tinder-white-logo.png'
 import colorLogo from '../images/tinder-color-png.png'
 
-const Nav = ({minimal, authToken}) => {
+const Nav = ({minimal, authToken, setShowModal, showModal, setIsSignUp }) => {
 
+    const handleClick = () => {
+        setShowModal(true)
+        setIsSignUp(false)
+    }
     return (
         <nav> 
             <div className="logo-container">
                 <img className="logo" src={minimal ? colorLogo: whiteLogo}/>
             </div>
 
-            {!authToken && !minimal && <button className="nav-button">Login</button>} 
+            {!authToken && !minimal && 
+            <button className="nav-button" 
+                onClick={handleClick}>Login</button>} 
         </nav>
     )
 }
