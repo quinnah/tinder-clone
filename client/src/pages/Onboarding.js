@@ -1,4 +1,6 @@
+import axios from 'axios'
 import {useState} from 'react'
+import { useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav'
 
 const Onboarding = () => {
@@ -17,8 +19,18 @@ const Onboarding = () => {
         matches: []
     })
 
-    const handleSubmit = () => {
+    let navigate = useNavigate()
+
+    const handleSubmit = async (e) => {
         console.log('submitted')
+        e.preventDefault()
+        try {
+            const response = await axios.put('http://localhost:8000', {formData})
+            const success = response.statusCode === 200
+            if (success) navigate('/dashboard')
+        } catch(err) {
+            console.log(err)
+        }
     }
 
     const handleChange = (e) => {
@@ -185,7 +197,7 @@ const Onboarding = () => {
                         onChange={handleChange}
                     />
                     <div className="photo-container">
-                        <img src={formData.url} alt="profile pic preview"/>
+                        {formData.url && <img src={formData.url} alt="profile pic preview"/>}
                     </div>
 
                 </section>
