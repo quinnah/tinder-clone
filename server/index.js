@@ -84,6 +84,26 @@ app.post('/login', async (req, res) => {
         console.log(err)
     }
 })
+
+// Find one user from the database
+app.get('/user', async (req, res) => {
+    const client = new MongoClient(uri)
+    const userId = req.query.userId
+
+    try {
+        await client.connect()
+        const database = client.db('app-data')
+        const users = database.collection('users')
+
+        const query = { user_id: userId }
+        const user = await users.findOne(query)
+        res.send(user)
+
+    } finally {
+        await client.close()
+    }
+})
+
 // Returns users in database, in JSON format
 app.get('/users', async (req, res) => {
     const client = new MongoClient(uri)
@@ -93,11 +113,63 @@ app.get('/users', async (req, res) => {
         const database = client.db('app-data')
         const users = database.collection('users')
 
-        const returnedUsers = await users.find().toArray()
-        res.send(returnedUsers)
+        // TODO: understand this syntax - writing pipelines
+        const pipeline =
+            [
+                {
+                    '$match': {
+                        'user_id': {
+                            '$in': userIds
+                        }
+                    }
+                }
+            ]
+
+        const foundUsers = await users.aggregate(pipeline).toArray()
+        res.json(foundUsers)
+
     } finally {
         await client.close()
     }
+})
+
+app.get('/gendered-users', async (req, res) => {
+    const client = new MongoClient(uri)
+    const gender = req.query.gender
+
+    try {
+        await client.connect()
+        const database = client.db('app-data')
+        const users = database.collection('users')
+        const query = { gender_identity: { $eq: gender } }
+        const foundUsers = await users.find(query).toArray()
+
+        res.send(foundUsers)
+    } finally {
+        await client.close()
+    }
+})
+
+// Update user with a match
+app.put('/addmatch', async (req, res) => {
+    const client = new MongoClient(uri)
+    const { userId, matchedUserId } = req.body
+
+    try {
+        await client.connect()
+        const database = client.db('app-data')
+        const users = database.collection('users')
+
+        const query = { user_id: userId }
+        const updateDocument = {
+            $push: { matches: { user_id: matchedUserId } },
+        }
+        const user = await users.updateOne(query, updateDocument)
+        res.send(user)
+    } finally {
+        await client.close()
+    }
+
 })
 
 // Update the user
